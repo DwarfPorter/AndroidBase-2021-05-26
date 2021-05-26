@@ -22,21 +22,18 @@ public class MainActivity extends AppCompatActivity {
         EditText editText2 = findViewById(R.id.edit2);
 
         Button button = findViewById(R.id.compare);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                TextView result = findViewById(R.id.result);
-                try {
-                    arg1 = Integer.valueOf(editText1.getText().toString());
-                    arg2 = Integer.valueOf(editText2.getText().toString());
-                    if (arg1.equals(arg2)) {
-                        result.setText("Равно!");
-                    } else {
-                        result.setText("Не равно!");
-                    }
-                } catch (NumberFormatException e){
-                    result.setText("Введите число!");
+        button.setOnClickListener(v -> {
+            TextView result = findViewById(R.id.result);
+            try {
+                arg1 = Integer.valueOf(editText1.getText().toString());
+                arg2 = Integer.valueOf(editText2.getText().toString());
+                if (arg1.equals(arg2)) {
+                    result.setText("Равно!");
+                } else {
+                    result.setText("Не равно!");
                 }
+            } catch (NumberFormatException e){
+                result.setText("Введите число!");
             }
         });
     }
