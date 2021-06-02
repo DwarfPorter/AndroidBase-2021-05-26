@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">activity state</string>
+    <string name="counter_1">Counter on click</string>
+    <string name="_0">0</string>
+    <string name="counter_2">Counter click listener</string>
+    <string name="counter_3">Counter click activity</string>
+</resources>
