@@ -19,7 +19,7 @@ import androidx.fragment.app.FragmentTransaction;
 public class CitiesFragment extends Fragment {
 
     public static final String CURRENT_CITY = "CurrentCity";
-    private int currentPosition = 0;    // Текущая позиция (выбранный город)
+    private City currentCity;    // Текущая позиция (выбранный город)
     private boolean isLandscape;
 
     @Override
@@ -52,8 +52,8 @@ public class CitiesFragment extends Fragment {
             view.addView(tv);
             final int index = i;
             tv.setOnClickListener(v -> {
-                currentPosition = index;
-                showCoatOfArms(index);
+                currentCity = new City(index, city);
+                showCoatOfArms(currentCity);
             });
         }
     }
@@ -68,7 +68,7 @@ public class CitiesFragment extends Fragment {
     // Сохраним текущую позицию (вызывается перед выходом из фрагмента)
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putInt(CURRENT_CITY, currentPosition);
+        outState.putParcelable(CURRENT_CITY, currentCity);
         super.onSaveInstanceState(outState);
     }
 
@@ -76,24 +76,26 @@ public class CitiesFragment extends Fragment {
     public void onViewStateRestored(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
         if (savedInstanceState != null) {
-            currentPosition = savedInstanceState.getInt(CURRENT_CITY, 0);
+            currentCity = savedInstanceState.getParcelable(CURRENT_CITY);
+        } else {
+            currentCity = new City(0, getResources().getStringArray(R.array.cities)[0]);
         }
 
         if (isLandscape){
-            showLandCoatOfArms(currentPosition);
+            showLandCoatOfArms(currentCity);
         }
     }
 
-    private void showCoatOfArms(int index) {
+    private void showCoatOfArms(City currentCity) {
         if (isLandscape) {
-            showLandCoatOfArms(index);
+            showLandCoatOfArms(currentCity);
         }else{
-            showPortCoatOfArms(index);
+            showPortCoatOfArms(currentCity);
         }
     }
 
-    private void showLandCoatOfArms(int index) {
-        CoatOfArmsFragment detail = CoatOfArmsFragment.newInstance(index);
+    private void showLandCoatOfArms(City currentCity) {
+        CoatOfArmsFragment detail = CoatOfArmsFragment.newInstance(currentCity);
 
         FragmentManager fragmentManager = requireActivity()
                 .getSupportFragmentManager();
@@ -103,10 +105,10 @@ public class CitiesFragment extends Fragment {
         fragmentTransaction.commit();
     }
 
-    private void showPortCoatOfArms(int index) {
+    private void showPortCoatOfArms(City currentCity) {
         Intent intent = new Intent();
         intent.setClass(getActivity(), CoatOfArmsActivity.class);
-        intent.putExtra(CoatOfArmsFragment.ARG_INDEX, index);
+        intent.putExtra(CoatOfArmsFragment.ARG_INDEX, currentCity);
         startActivity(intent);
     }
 }
