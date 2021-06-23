@@ -1,5 +1,6 @@
 package ru.geekbrains.socialnetwork.ui;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -21,10 +22,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import org.jetbrains.annotations.NotNull;
 
+import ru.geekbrains.socialnetwork.MainActivity;
+import ru.geekbrains.socialnetwork.Navigation;
 import ru.geekbrains.socialnetwork.R;
 import ru.geekbrains.socialnetwork.data.CardData;
 import ru.geekbrains.socialnetwork.data.CardsSource;
 import ru.geekbrains.socialnetwork.data.CardsSourceImpl;
+import ru.geekbrains.socialnetwork.observe.Observer;
+import ru.geekbrains.socialnetwork.observe.Publisher;
 
 public class SocialNetworkFragment extends Fragment {
 
@@ -32,9 +37,20 @@ public class SocialNetworkFragment extends Fragment {
     private CardsSource data;
     private SocialNetworkAdapter adapter;
     private RecyclerView recyclerView;
+    private Navigation navigation;
+    private Publisher publisher;
 
     public static SocialNetworkFragment newInstance() {
         return new SocialNetworkFragment();
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // Получим источник данных для списка
+        // Поскольку onCreateView запускается каждый раз
+        // при возврате в фрагмент, данные надо создавать один раз
+        data = new CardsSourceImpl(getResources()).init();
     }
 
     @Override
@@ -42,9 +58,23 @@ public class SocialNetworkFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_socialnetwork, container, false);
         setHasOptionsMenu(true);
-        data = new CardsSourceImpl(getResources()).init();
         initRecyclerView(view);
         return view;
+    }
+
+    @Override
+    public void onAttach(@NonNull @NotNull Context context) {
+        super.onAttach(context);
+        MainActivity activity = (MainActivity)context;
+        navigation = activity.getNavigation();
+        publisher = activity.getPublisher();
+    }
+
+    @Override
+    public void onDetach() {
+        navigation = null;
+        publisher = null;
+        super.onDetach();
     }
 
     @Override
@@ -56,12 +86,15 @@ public class SocialNetworkFragment extends Fragment {
     public boolean onOptionsItemSelected(@NonNull @NotNull MenuItem item) {
         switch (item.getItemId()){
             case R.id.action_add:
-                data.addCardData(new CardData("Заголовок " + data.getSize(),
-                        "Описание " + data.getSize(),
-                        R.drawable.nature1,
-                        false));
-                adapter.notifyItemInserted(data.getSize() - 1);
-                recyclerView.smoothScrollToPosition(data.getSize() - 1);
+                navigation.addFragment(CardFragment.newInstance(), true);
+                publisher.subscribe(new Observer() {
+                    @Override
+                    public void updateCardData(CardData cardData) {
+                        data.addCardData(cardData);
+                        adapter.notifyItemInserted(data.getSize() - 1);
+                        recyclerView.scrollToPosition(data.getSize() - 1);
+                    }
+                });
                 return true;
             case R.id.action_clear:
                 data.clearCardData();
@@ -83,12 +116,14 @@ public class SocialNetworkFragment extends Fragment {
         int position = adapter.getMenuPosition();
         switch(item.getItemId()){
             case R.id.action_update:
-                CardData current = data.getCardData(position);
-                data.updateCardData(position, new CardData("Кадр " + position,
-                        current.getDescription(),
-                        current.getPicture(),
-                        true));
-                adapter.notifyItemChanged(position);
+                navigation.addFragment(CardFragment.newInstance(data.getCardData(position)), true);
+                publisher.subscribe(new Observer() {
+                    @Override
+                    public void updateCardData(CardData cardData) {
+                        data.updateCardData(position, cardData);
+                        adapter.notifyItemChanged(position);
+                    }
+                });
                 return true;
             case R.id.action_delete:
                 data.deleteCardData(position);

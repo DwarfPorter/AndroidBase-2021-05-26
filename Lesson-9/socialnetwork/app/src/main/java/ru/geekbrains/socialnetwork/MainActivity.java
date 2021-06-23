@@ -8,30 +8,31 @@ import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
 
+import ru.geekbrains.socialnetwork.observe.Publisher;
 import ru.geekbrains.socialnetwork.ui.SocialNetworkFragment;
 
 public class MainActivity extends AppCompatActivity {
+
+    private Publisher publisher = new Publisher();
+    private Navigation navigation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        navigation = new Navigation(getSupportFragmentManager());
         initToolbar();
 
         Fragment fragment = SocialNetworkFragment.newInstance();
-        addFragment(fragment);
+        getNavigation().addFragment(fragment, false);
     }
 
-    private void addFragment(Fragment fragment) {
-        //Получить менеджер фрагментов
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        // Открыть транзакцию
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.fragment_container, fragment);
-        fragmentTransaction.addToBackStack(null);
-        // Закрыть транзакцию
-        fragmentTransaction.commit();
+    public Navigation getNavigation() {
+        return navigation;
+    }
+
+    public Publisher getPublisher() {
+        return publisher;
     }
 
     private void initToolbar() {
