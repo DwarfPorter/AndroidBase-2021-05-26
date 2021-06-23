@@ -1,5 +1,6 @@
 package ru.geekbrains.socialnetwork.ui;
 
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +10,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
+
+import org.jetbrains.annotations.NotNull;
 
 import ru.geekbrains.socialnetwork.R;
 import ru.geekbrains.socialnetwork.data.CardData;
@@ -18,11 +22,14 @@ import ru.geekbrains.socialnetwork.data.CardsSource;
 public class SocialNetworkAdapter extends RecyclerView.Adapter<SocialNetworkAdapter.ViewHolder> {
 
     private final static String TAG = "SocialNetwork";
-    private CardsSource dataSource;
+    private final CardsSource dataSource;
+    private final Fragment fragment;
     private OnItemClickListener itemClickListener;
+    private int menuPosition;
 
-    public SocialNetworkAdapter(CardsSource dataSource){
+    public SocialNetworkAdapter(CardsSource dataSource, Fragment fragment){
         this.dataSource = dataSource;
+        this.fragment = fragment;
     }
 
     @NonNull
@@ -52,6 +59,10 @@ public class SocialNetworkAdapter extends RecyclerView.Adapter<SocialNetworkAdap
         this.itemClickListener = itemClickListener;
     }
 
+    public int getMenuPosition(){
+        return menuPosition;
+    }
+
     public interface OnItemClickListener {
         void onItemClick(View view, int position);
     }
@@ -71,11 +82,31 @@ public class SocialNetworkAdapter extends RecyclerView.Adapter<SocialNetworkAdap
             image = itemView.findViewById(R.id.imageView);
             like = itemView.findViewById(R.id.like);
 
+            registerContextMenu(itemView);
+
+            image.setOnLongClickListener(v -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    menuPosition = getLayoutPosition();
+                    itemView.showContextMenu(10, 10);
+                }
+                return true;
+            });
+
             image.setOnClickListener(v -> {
                 if (itemClickListener != null){
                     itemClickListener.onItemClick(v, getAdapterPosition());
                 }
             });
+        }
+
+        private void registerContextMenu(@NotNull View itemView) {
+            if (fragment != null) {
+                itemView.setOnLongClickListener(v -> {
+                    menuPosition = getLayoutPosition();
+                    return false;
+                });
+                fragment.registerForContextMenu(itemView);
+            }
         }
 
         public void setData(CardData data){
