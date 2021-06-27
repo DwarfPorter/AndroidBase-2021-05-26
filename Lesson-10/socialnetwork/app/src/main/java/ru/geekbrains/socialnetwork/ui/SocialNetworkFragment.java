@@ -27,7 +27,9 @@ import ru.geekbrains.socialnetwork.Navigation;
 import ru.geekbrains.socialnetwork.R;
 import ru.geekbrains.socialnetwork.data.CardData;
 import ru.geekbrains.socialnetwork.data.CardsSource;
+import ru.geekbrains.socialnetwork.data.CardsSourceFirebaseImpl;
 import ru.geekbrains.socialnetwork.data.CardsSourceImpl;
+import ru.geekbrains.socialnetwork.data.CardsSourceResponse;
 import ru.geekbrains.socialnetwork.observe.Observer;
 import ru.geekbrains.socialnetwork.observe.Publisher;
 
@@ -45,27 +47,25 @@ public class SocialNetworkFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // Получим источник данных для списка
-        // Поскольку onCreateView запускается каждый раз
-        // при возврате в фрагмент, данные надо создавать один раз
-        data = new CardsSourceImpl(getResources()).init();
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_socialnetwork, container, false);
         setHasOptionsMenu(true);
         initRecyclerView(view);
+        data = new CardsSourceFirebaseImpl().init(new CardsSourceResponse() {
+            @Override
+            public void initialized(CardsSource cardsData) {
+                adapter.notifyDataSetChanged();
+            }
+        });
+        adapter.setDataSource(data);
         return view;
     }
 
     @Override
     public void onAttach(@NonNull @NotNull Context context) {
         super.onAttach(context);
-        MainActivity activity = (MainActivity)context;
+        MainActivity activity = (MainActivity) context;
         navigation = activity.getNavigation();
         publisher = activity.getPublisher();
     }
@@ -83,28 +83,6 @@ public class SocialNetworkFragment extends Fragment {
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull @NotNull MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.action_add:
-                navigation.addFragment(CardFragment.newInstance(), true);
-                publisher.subscribe(new Observer() {
-                    @Override
-                    public void updateCardData(CardData cardData) {
-                        data.addCardData(cardData);
-                        adapter.notifyItemInserted(data.getSize() - 1);
-                        recyclerView.scrollToPosition(data.getSize() - 1);
-                    }
-                });
-                return true;
-            case R.id.action_clear:
-                data.clearCardData();
-                adapter.notifyDataSetChanged();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void onCreateContextMenu(@NonNull @NotNull ContextMenu menu, @NonNull @NotNull View v, @Nullable @org.jetbrains.annotations.Nullable ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         MenuInflater inflater = requireActivity().getMenuInflater();
@@ -112,25 +90,50 @@ public class SocialNetworkFragment extends Fragment {
     }
 
     @Override
+    public boolean onOptionsItemSelected(@NonNull @NotNull MenuItem item) {
+        return onItemSelected(item.getItemId()) || super.onOptionsItemSelected(item);
+    }
+
+    @Override
     public boolean onContextItemSelected(@NonNull @NotNull MenuItem item) {
-        int position = adapter.getMenuPosition();
-        switch(item.getItemId()){
-            case R.id.action_update:
-                navigation.addFragment(CardFragment.newInstance(data.getCardData(position)), true);
+        return onItemSelected(item.getItemId()) || super.onContextItemSelected(item);
+    }
+
+    private boolean onItemSelected(int menuItem) {
+        switch (menuItem) {
+            case R.id.action_add:
+                navigation.addFragment(CardFragment.newInstance(), true);
                 publisher.subscribe(new Observer() {
                     @Override
                     public void updateCardData(CardData cardData) {
-                        data.updateCardData(position, cardData);
-                        adapter.notifyItemChanged(position);
+                        data.addCardData(cardData);
+                        adapter.notifyItemInserted(0);
+                        recyclerView.scrollToPosition(0);
+                    }
+                });
+                return true;
+            case R.id.action_update:
+                int updatePosition = adapter.getMenuPosition();
+                navigation.addFragment(CardFragment.newInstance(data.getCardData(updatePosition)), true);
+                publisher.subscribe(new Observer() {
+                    @Override
+                    public void updateCardData(CardData cardData) {
+                        data.updateCardData(updatePosition, cardData);
+                        adapter.notifyItemChanged(updatePosition);
                     }
                 });
                 return true;
             case R.id.action_delete:
-                data.deleteCardData(position);
-                adapter.notifyItemRemoved(position);
+                int deletePosition = adapter.getMenuPosition();
+                data.deleteCardData(deletePosition);
+                adapter.notifyItemRemoved(deletePosition);
+                return true;
+            case R.id.action_clear:
+                data.clearCardData();
+                adapter.notifyDataSetChanged();
                 return true;
         }
-        return super.onContextItemSelected(item);
+        return false;
     }
 
     private void initRecyclerView(View view) {
@@ -141,7 +144,7 @@ public class SocialNetworkFragment extends Fragment {
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(layoutManager);
 
-        adapter = new SocialNetworkAdapter(data, this);
+        adapter = new SocialNetworkAdapter(this);
         recyclerView.setAdapter(adapter);
 
         DividerItemDecoration itemDecoration = new DividerItemDecoration(getContext(),

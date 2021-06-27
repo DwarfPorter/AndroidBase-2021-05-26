@@ -24,13 +24,12 @@ import ru.geekbrains.socialnetwork.data.CardsSource;
 public class SocialNetworkAdapter extends RecyclerView.Adapter<SocialNetworkAdapter.ViewHolder> {
 
     private final static String TAG = "SocialNetwork";
-    private final CardsSource dataSource;
+    private CardsSource dataSource;
     private final Fragment fragment;
     private OnItemClickListener itemClickListener;
     private int menuPosition;
 
-    public SocialNetworkAdapter(CardsSource dataSource, Fragment fragment){
-        this.dataSource = dataSource;
+    public SocialNetworkAdapter(Fragment fragment){
         this.fragment = fragment;
     }
 
@@ -63,6 +62,11 @@ public class SocialNetworkAdapter extends RecyclerView.Adapter<SocialNetworkAdap
 
     public int getMenuPosition(){
         return menuPosition;
+    }
+
+    public void setDataSource(CardsSource dataSource) {
+        this.dataSource = dataSource;
+        notifyDataSetChanged();
     }
 
     public interface OnItemClickListener {

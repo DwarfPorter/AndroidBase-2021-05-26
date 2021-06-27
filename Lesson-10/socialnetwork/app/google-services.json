@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "683672868786",
+    "project_id": "social-network-fbe89",
+    "storage_bucket": "social-network-fbe89.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:683672868786:android:85d02bb6dc61a5b02ef6ab",
+        "android_client_info": {
+          "package_name": "ru.geekbrains.socialnetwork"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "683672868786-cctq6gnl8uk5mluo2osqoqe7npdpj11r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKyFHgBu1ibn0UFnUfBdov6FTPNrgu8Hc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "683672868786-cctq6gnl8uk5mluo2osqoqe7npdpj11r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
